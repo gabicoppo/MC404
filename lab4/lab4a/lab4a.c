@@ -31,7 +31,7 @@ void write(int __fd, const void *__buf, int __n)
 #define STDIN_FD  0
 #define STDOUT_FD 1
 
-int conv_char_to_int(const char* buf, int len) { // função que converte char pra inr
+int conv_char_to_int(const char* buf) { // função que converte char pra int
     int number = 0;
     int sign = 1;
 
@@ -44,7 +44,7 @@ int conv_char_to_int(const char* buf, int len) { // função que converte char p
         sign = -1;
     }
 
-    for (int i=start_index; i<len; i++) {
+    for (int i=start_index; i<5; i++) {
         int digit = buf[i] - '0'; // transformando ascii
         number = number * 10 + digit;
     }
@@ -151,19 +151,19 @@ int main()
     //write(STDOUT_FD, buffer, 30);
     unsigned int packed = 0;
 
-    int first_val = conv_char_to_int(&buffer[0], 5);
+    int first_val = conv_char_to_int(&buffer[0]);
     int first_bi = mask_first(first_val);
     
-    int second_val = conv_char_to_int(&buffer[6], 5);
+    int second_val = conv_char_to_int(&buffer[6]);
     int second_bi = mask_second(second_val);
     
-    int third_val = conv_char_to_int(&buffer[12], 5);
+    int third_val = conv_char_to_int(&buffer[12]);
     int third_bi = mask_third(third_val);
     
-    int fourth_val = conv_char_to_int(&buffer[18], 5);
+    int fourth_val = conv_char_to_int(&buffer[18]);
     int fourth_bi = mask_fourth(fourth_val);
     
-    int fifth_val = conv_char_to_int(&buffer[24], 5);
+    int fifth_val = conv_char_to_int(&buffer[24]);
     int fifth_bi = mask_fifth(fifth_val);
 
     pack(&packed, first_bi, second_bi, third_bi, fourth_bi, fifth_bi);
