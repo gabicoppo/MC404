@@ -1,7 +1,7 @@
 	.text
 	.attribute	4, 16
 	.attribute	5, "rv32i2p1_m2p0_a2p1_f2p2_d2p2_zicsr2p0_zifencei2p0"
-	.file	"lab4a.c"
+	.file	"lab5a.c"
 	.globl	read                            # -- Begin function read
 	.p2align	2
 	.type	read,@function
@@ -71,17 +71,16 @@ write:                                  # @write
 	.type	conv_char_to_int,@function
 conv_char_to_int:                       # @conv_char_to_int
 # %bb.0:
-	addi	sp, sp, -48
-	sw	ra, 44(sp)                      # 4-byte Folded Spill
-	sw	s0, 40(sp)                      # 4-byte Folded Spill
-	addi	s0, sp, 48
+	addi	sp, sp, -32
+	sw	ra, 28(sp)                      # 4-byte Folded Spill
+	sw	s0, 24(sp)                      # 4-byte Folded Spill
+	addi	s0, sp, 32
 	sw	a0, -12(s0)
-	sw	a1, -16(s0)
 	li	a0, 0
-	sw	a0, -20(s0)
+	sw	a0, -16(s0)
 	li	a1, 1
-	sw	a1, -24(s0)
-	sw	a0, -28(s0)
+	sw	a1, -20(s0)
+	sw	a0, -24(s0)
 	lw	a0, -12(s0)
 	lbu	a0, 0(a0)
 	li	a1, 43
@@ -89,49 +88,49 @@ conv_char_to_int:                       # @conv_char_to_int
 	j	.LBB2_1
 .LBB2_1:
 	li	a0, 1
-	sw	a0, -28(s0)
+	sw	a0, -24(s0)
 	j	.LBB2_3
 .LBB2_2:
 	li	a0, 1
-	sw	a0, -28(s0)
-	li	a0, -1
 	sw	a0, -24(s0)
+	li	a0, -1
+	sw	a0, -20(s0)
 	j	.LBB2_3
 .LBB2_3:
-	lw	a0, -28(s0)
-	sw	a0, -32(s0)
+	lw	a0, -24(s0)
+	sw	a0, -28(s0)
 	j	.LBB2_4
 .LBB2_4:                                # =>This Inner Loop Header: Depth=1
-	lw	a0, -32(s0)
-	lw	a1, -16(s0)
-	bge	a0, a1, .LBB2_7
+	lw	a1, -28(s0)
+	li	a0, 4
+	blt	a0, a1, .LBB2_7
 	j	.LBB2_5
 .LBB2_5:                                #   in Loop: Header=BB2_4 Depth=1
 	lw	a0, -12(s0)
-	lw	a1, -32(s0)
+	lw	a1, -28(s0)
 	add	a0, a0, a1
 	lbu	a0, 0(a0)
 	addi	a0, a0, -48
-	sw	a0, -36(s0)
-	lw	a0, -20(s0)
+	sw	a0, -32(s0)
+	lw	a0, -16(s0)
 	li	a1, 10
 	mul	a0, a0, a1
-	lw	a1, -36(s0)
+	lw	a1, -32(s0)
 	add	a0, a0, a1
-	sw	a0, -20(s0)
+	sw	a0, -16(s0)
 	j	.LBB2_6
 .LBB2_6:                                #   in Loop: Header=BB2_4 Depth=1
-	lw	a0, -32(s0)
+	lw	a0, -28(s0)
 	addi	a0, a0, 1
-	sw	a0, -32(s0)
+	sw	a0, -28(s0)
 	j	.LBB2_4
 .LBB2_7:
-	lw	a0, -20(s0)
-	lw	a1, -24(s0)
+	lw	a0, -16(s0)
+	lw	a1, -20(s0)
 	mul	a0, a0, a1
-	lw	ra, 44(sp)                      # 4-byte Folded Reload
-	lw	s0, 40(sp)                      # 4-byte Folded Reload
-	addi	sp, sp, 48
+	lw	ra, 28(sp)                      # 4-byte Folded Reload
+	lw	s0, 24(sp)                      # 4-byte Folded Reload
+	addi	sp, sp, 32
 	ret
 .Lfunc_end2:
 	.size	conv_char_to_int, .Lfunc_end2-conv_char_to_int
@@ -477,10 +476,10 @@ _start:                                 # @_start
 	.type	main,@function
 main:                                   # @main
 # %bb.0:
-	addi	sp, sp, -80
-	sw	ra, 76(sp)                      # 4-byte Folded Spill
-	sw	s0, 72(sp)                      # 4-byte Folded Spill
-	addi	s0, sp, 80
+	addi	sp, sp, -64
+	sw	ra, 60(sp)                      # 4-byte Folded Spill
+	sw	s0, 56(sp)                      # 4-byte Folded Spill
+	addi	s0, sp, 64
 	lui	a0, %hi(buffer)
 	addi	a1, a0, %lo(buffer)
 	sw	a1, -64(s0)                     # 4-byte Folded Spill
@@ -493,43 +492,37 @@ main:                                   # @main
 	lw	a0, -64(s0)                     # 4-byte Folded Reload
 	sw	a2, -12(s0)
 	sw	a1, -16(s0)
-	li	a1, 5
-	sw	a1, -68(s0)                     # 4-byte Folded Spill
 	call	conv_char_to_int
 	sw	a0, -20(s0)
 	lw	a0, -20(s0)
 	call	mask_first
-	lw	a1, -68(s0)                     # 4-byte Folded Reload
-	mv	a2, a0
+	mv	a1, a0
 	lw	a0, -64(s0)                     # 4-byte Folded Reload
-	sw	a2, -24(s0)
+	sw	a1, -24(s0)
 	addi	a0, a0, 6
 	call	conv_char_to_int
 	sw	a0, -28(s0)
 	lw	a0, -28(s0)
 	call	mask_second
-	lw	a1, -68(s0)                     # 4-byte Folded Reload
-	mv	a2, a0
+	mv	a1, a0
 	lw	a0, -64(s0)                     # 4-byte Folded Reload
-	sw	a2, -32(s0)
+	sw	a1, -32(s0)
 	addi	a0, a0, 12
 	call	conv_char_to_int
 	sw	a0, -36(s0)
 	lw	a0, -36(s0)
 	call	mask_third
-	lw	a1, -68(s0)                     # 4-byte Folded Reload
-	mv	a2, a0
+	mv	a1, a0
 	lw	a0, -64(s0)                     # 4-byte Folded Reload
-	sw	a2, -40(s0)
+	sw	a1, -40(s0)
 	addi	a0, a0, 18
 	call	conv_char_to_int
 	sw	a0, -44(s0)
 	lw	a0, -44(s0)
 	call	mask_fourth
-	lw	a1, -68(s0)                     # 4-byte Folded Reload
-	mv	a2, a0
+	mv	a1, a0
 	lw	a0, -64(s0)                     # 4-byte Folded Reload
-	sw	a2, -48(s0)
+	sw	a1, -48(s0)
 	addi	a0, a0, 24
 	call	conv_char_to_int
 	sw	a0, -52(s0)
@@ -546,9 +539,9 @@ main:                                   # @main
 	lw	a0, -16(s0)
 	call	hex_code
 	lw	a0, -60(s0)                     # 4-byte Folded Reload
-	lw	ra, 76(sp)                      # 4-byte Folded Reload
-	lw	s0, 72(sp)                      # 4-byte Folded Reload
-	addi	sp, sp, 80
+	lw	ra, 60(sp)                      # 4-byte Folded Reload
+	lw	s0, 56(sp)                      # 4-byte Folded Reload
+	addi	sp, sp, 64
 	ret
 .Lfunc_end12:
 	.size	main, .Lfunc_end12-main
