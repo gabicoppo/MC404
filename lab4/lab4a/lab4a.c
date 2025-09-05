@@ -49,7 +49,6 @@ int conv_char_to_int(const char* buf) { // função que converte char pra int
         number = number * 10 + digit;
     }
 
-    //print_int(number*sign);
     return number * sign;
 }
 
