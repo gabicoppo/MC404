@@ -1,3 +1,18 @@
+// Enum of possible instruction types
+typedef enum InstType { R, I, S, B, U, J} InstType;
+
+// Struct with instruction data
+typedef struct InstData {
+    int opcode,
+        rd,
+        rs1,
+        rs2,
+        imm,
+        funct3,
+        funct7;
+    InstType type;
+} InstData;
+
 int read(int __fd, const void *__buf, int __n){
     int ret_val;
     __asm__ __volatile__(
