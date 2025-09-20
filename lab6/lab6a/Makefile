@@ -1,5 +1,5 @@
-square_root.o: square_root.s
-	clang --target=riscv32 -march=rv32g -mabi=ilp32d -mno-relax square_root.s -c -o square_root.o
+lab6a.o: lab6a.s
+	clang --target=riscv32 -march=rv32g -mabi=ilp32d -mno-relax lab6a.s -c -o lab6a.o
 
-prog.x: square_root.o
-	ld.lld square_root.o -o executable.x
+prog.x: lab6a.o
+	ld.lld lab6a.o -o executable.x
