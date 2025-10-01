@@ -7,13 +7,7 @@ header: .space 262415
 size: .skip 10
 
 .text
-.globl _start
-
-_start:
-    jal ra, main
-
-    li a7, 93    # syscall exit
-    ecall
+.globl main
 
 main:
     la a0, image_file    # address for the file path
@@ -24,36 +18,71 @@ main:
 
     mv s0, a0  # movendo fd pro rd s0 tb
 
-    jal proccess_header
+    #jal proccess_header
+
+    mv a0, s0  # file descriptor = s0 (image)
+    la a1, header
+    li a2, 262415
+    li a7, 63 # syscall read (63)
+    ecall
+
+    la s3, header # agoora vamos usar o ponteiro s3, que aponta pro inicio do header, pra fazer o parsing
+
+    jal ignore
+
+    jal ascii_pra_int # quando encontrar a linha do tamanho, chama isso aqui
+
+    mv s1, a0 # salvando o primeiro numero em s1
+
+    jal ignore
+
+    jal ascii_pra_int # no inicio, já ta apontando pra largura pq demos addi no "fim_conversao"
+
+    mv s2, a0 # salvando o segundo numero em s2
+
+    jal ascii_pra_int
+
+    jal ignore
 
     mv a0, s1      # largura X
     mv a1, s2          # altura Y
     li a7, 2201           # syscall setCanvasSize 
     ecall
 
-    jal make_image
+    jal make_image  
+
+    mv a0, s0   
+    li a7, 57
+    ecall # syscall close
     
-    ret
+    li a7, 93    # syscall exit
+    ecall
 
 make_image:
     li s4, 0
 
 loop_y:
-    bge s4, s2, fim_do_desenho # quando ja fizemos pra todas as linhas 
+    beq s4, s2, fim_do_desenho # quando ja fizemos pra todas as linhas 
     li s5, 0
 
 loop_x:
-    lb t0, 0(s3)
+    beq s5, s1, fim_loop_x # quando ja fizemos pra todos os elementos da linha
+    lbu t0, 0(s3)
     addi s3, s3, 1
-    bge s5, s1, fim_loop_x # quando ja fizemos pra todos os elementos da linha
 
-    li a2, 255             # canal Alfa
-    slli t1, t0, 8         # canal Azul
-    or a2, a2, t1
-    slli t1, t0, 16        # canal Verde
-    or a2, a2, t1
-    slli t1, t0, 24        # canal Vermelho
-    or a2, a2, t1
+    li a2, 0
+
+    slli t1, t0, 24      
+    or a2, a2, t1         
+
+    slli t1, t0, 16      
+    or a2, a2, t1         
+
+    slli t1, t0, 8           
+    or a2, a2, t1         
+
+    li t1, 255             
+    or a2, a2, t1          
 
     mv a0, s5              # coordenada x (do contador s5)
     mv a1, s4              # coordenada y (do contador s4)
@@ -70,38 +99,15 @@ fim_loop_x:
 fim_do_desenho:
     ret
 
-proccess_header:
-    mv a0, s0  # file descriptor = s0 (image)
-    la a1, header 
-    li a2, 262415
-    li a7, 63 # syscall read (63)
-    ecall
-
-    la s3, header # agoora vamos usar o ponteiro s3, que aponta pro inicio do header, pra fazer o parsing
-    addi s3, s3, 2
-
-    jal ascii_pra_int # quando encontrar a linha do tamanho, chama isso aqui
-
-    mv s1, a0 # salvando o primeiro numero em s1
-
-    jal ignore
-
-    jal ascii_pra_int # no inicio, já ta apontando pra largura pq demos addi no "fim_conversao"
-
-    mv s2, a0 # salvando o segundo numero em s2
-
-    addi s3, s3, 4
-
-    ret
-
 ignore:
     lb t1, 0(s3) # olahmos o caractere atual
 
     li t2, '\n'
     li t3, ' '
     li t4, '#'
+    li t5, 'P'
 
-
+    beq t1, t5, loop_pular_linha
     beq t1, t4, loop_pular_linha # se encontramos um '#' ou 'P', pulamos a linha
     beq t1, t2, loop_parse # se encontramos espaço ou \n, avançamos o ponteiro s3
     beq t1, t3, loop_parse
@@ -144,6 +150,7 @@ loop_conversao:
     j loop_conversao
 
 fim_conversao:
+    addi s3, s3, 1
     ret     
     
 
