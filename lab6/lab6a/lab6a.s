@@ -119,6 +119,6 @@ convert_int_to_char:
     ecall
 
     # Invoke the syscall exit to finalize the program.
-    li a0, 0         # Load the exit code (0 => No error) into a0
-    li a7, 93        # Load the syscall code (93 => exit) into a7
+    li a0, 0         
+    li a7, 93        
     ecall            # Invoke the syscall
