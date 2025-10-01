@@ -26,11 +26,15 @@ main:
 
     jal proccess_header
 
+    mv a0, s1      # largura
+    mv a1, s2          # altura
+    li a7, 2201            # syscall setCanvasSize 
+    ecall
 
-
-
-
-
+    # Invoke the syscall exit to finalize the program.
+    li a0, 0         
+    li a7, 93        
+    ecall            # Invoke the syscall
 
 read:
     li a0, 0  # file descriptor = 0 (stdin)
@@ -46,6 +50,8 @@ proccess_header:
     li a7, 63 # syscall read (63)
     ecall
 
+    la s3, header # agoora vamos usar o ponteiro s3, que aponta pro inicio do header, pra fazer o parsing
+
     jal ignore
     #vamos voltar pra essa função quando chegarmos num numero, e.g, o tamanho da imagem
 
@@ -57,9 +63,9 @@ proccess_header:
 
     mv s2, a0 # salvando o segundo numero em s2
 
-    jal ignore # pra pular o "255"
+    jal loop_pular_maxval # pra pular o "255"
 
-    mv s3, a1 # agoora vamos usar o ponteiro s3, que aponta pro inicio do header, pra fazer o parsing
+    ret
 
 ignore:
     lb t1, 0(s3) # olahmos o caractere atual
@@ -75,7 +81,6 @@ ignore:
     beq t1, t3, loop_parse
 
     ret # se chegamos aqui, encontramos o tamanho
-           
 
 loop_pular_linha:
     addi s3, s3, 1 # se não, movemos pro prox caractere
@@ -116,7 +121,18 @@ loop_conversao:
 
 fim_conversao:
     addi s3, s3, 1
-    ret             
+    ret     
+
+loop_pular_maxval:
+    addi s3, s3, 1 # se não, movemos pro prox caractere
+    lb t1, 0(s3) # olahmos o caractere atual
+
+    li t2, '\n'
+    bne t1, t2, loop_pular_linha # se nao tivermos chegados no fim da linha, chamamos essa f de novo
+
+    addi s3, s3, 1 # vamos pra linha seguinte
+
+    ret        
 
 
 
