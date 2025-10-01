@@ -2,12 +2,12 @@
 
 image_file: .asciz "image.pgm"
 
-header: .skip 262415
+header: .space 262415
 
 size: .skip 10
 
 .text
-.globl main
+.globl _start
 
 _start:
     jal ra, main
@@ -26,44 +26,71 @@ main:
 
     jal proccess_header
 
-    mv a0, s1      # largura
-    mv a1, s2          # altura
-    li a7, 2201            # syscall setCanvasSize 
+    mv a0, s1      # largura X
+    mv a1, s2          # altura Y
+    li a7, 2201           # syscall setCanvasSize 
     ecall
 
-    # Invoke the syscall exit to finalize the program.
-    li a0, 0         
-    li a7, 93        
-    ecall            # Invoke the syscall
+    jal make_image
+    
+    ret
 
-read:
-    li a0, 0  # file descriptor = 0 (stdin)
-    la a1, in_buffer #  buffer to write the data
-    li a2, 20  # size (reads 20 bytes)
-    li a7, 63 # syscall read (63)
+make_image:
+    li s4, 0
+
+loop_y:
+    bge s4, s2, fim_do_desenho # quando ja fizemos pra todas as linhas 
+    li s5, 0
+
+loop_x:
+    lb t0, 0(s3)
+    addi s3, s3, 1
+    bge s5, s1, fim_loop_x # quando ja fizemos pra todos os elementos da linha
+
+    li a2, 255             # canal Alfa
+    slli t1, t0, 8         # canal Azul
+    or a2, a2, t1
+    slli t1, t0, 16        # canal Verde
+    or a2, a2, t1
+    slli t1, t0, 24        # canal Vermelho
+    or a2, a2, t1
+
+    mv a0, s5              # coordenada x (do contador s5)
+    mv a1, s4              # coordenada y (do contador s4)
+    li a7, 2200            # syscall setPixel
     ecall
+
+    addi s5, s5, 1
+    j loop_x
+
+fim_loop_x:
+    addi s4, s4, 1
+    j loop_y
+
+fim_do_desenho:
+    ret
 
 proccess_header:
-    li a0, s0  # file descriptor = s0 (image)
+    mv a0, s0  # file descriptor = s0 (image)
     la a1, header 
     li a2, 262415
     li a7, 63 # syscall read (63)
     ecall
 
     la s3, header # agoora vamos usar o ponteiro s3, que aponta pro inicio do header, pra fazer o parsing
-
-    jal ignore
-    #vamos voltar pra essa função quando chegarmos num numero, e.g, o tamanho da imagem
+    addi s3, s3, 2
 
     jal ascii_pra_int # quando encontrar a linha do tamanho, chama isso aqui
 
     mv s1, a0 # salvando o primeiro numero em s1
 
+    jal ignore
+
     jal ascii_pra_int # no inicio, já ta apontando pra largura pq demos addi no "fim_conversao"
 
     mv s2, a0 # salvando o segundo numero em s2
 
-    jal loop_pular_maxval # pra pular o "255"
+    addi s3, s3, 4
 
     ret
 
@@ -73,10 +100,9 @@ ignore:
     li t2, '\n'
     li t3, ' '
     li t4, '#'
-    li t5, 'P'
+
 
     beq t1, t4, loop_pular_linha # se encontramos um '#' ou 'P', pulamos a linha
-    beq t1, t5, loop_pular_linha
     beq t1, t2, loop_parse # se encontramos espaço ou \n, avançamos o ponteiro s3
     beq t1, t3, loop_parse
 
@@ -95,8 +121,6 @@ loop_pular_linha:
 
 loop_parse:
     addi s3, s3, 1 # se não, movemos pro prox caractere
-    lb t1, 0(s3) # olahmos o caractere atual
-
     j ignore
 
 ascii_pra_int:
@@ -120,19 +144,8 @@ loop_conversao:
     j loop_conversao
 
 fim_conversao:
-    addi s3, s3, 1
     ret     
-
-loop_pular_maxval:
-    addi s3, s3, 1 # se não, movemos pro prox caractere
-    lb t1, 0(s3) # olahmos o caractere atual
-
-    li t2, '\n'
-    bne t1, t2, loop_pular_linha # se nao tivermos chegados no fim da linha, chamamos essa f de novo
-
-    addi s3, s3, 1 # vamos pra linha seguinte
-
-    ret        
+    
 
 
 
