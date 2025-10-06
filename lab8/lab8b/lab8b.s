@@ -44,8 +44,8 @@ main:
 
     jal ignore # ignorando a linha até a imagem 
 
-    mv a0, s1      # largura X
-    mv a1, s2          # altura Y
+    mv a0, s1      # largura 
+    mv a1, s2          # altura 
     li a7, 2201           # syscall setCanvasSize 
     ecall
 
@@ -60,13 +60,23 @@ main:
 
 make_image:
     li s4, 0
-
-loop_y:
-    beq s4, s2, fim_do_desenho # quando ja fizemos pra todas as linhas 
-    li s5, 0
+    mv s6, s2
+    addi s6, s6, -1
 
 loop_x:
-    beq s5, s1, fim_loop_x # quando ja fizemos pra todos os elementos da linha
+    beq s4, s2, fim_do_desenho # quando ja fizemos pra todas as linhas 
+
+    li s5, 0
+    mv s7, s1
+    addi s7, s7, -1
+
+    bqz s4, set_black_x
+    beq s4, s6, set_black_x # se for a primeira ou ultima linha, eh preto
+
+loop_y:
+    bqz s5, set_black
+    beq s5, s7, set_black # se for a primeira ou ultima coluna, eh preto
+    beq s5, s1, fim_loop_y # quando ja fizemos pra todos os elementos da linha
     lbu t0, 0(s3)
     addi s3, s3, 1
 
@@ -90,14 +100,29 @@ loop_x:
     ecall
 
     addi s5, s5, 1
-    j loop_x
-
-fim_loop_x:
-    addi s4, s4, 1
     j loop_y
+
+fim_loop_y:
+    addi s4, s4, 1
+    j loop_x
 
 fim_do_desenho:
     ret
+
+set_black_x:
+    beq s5, s1, fim_loop_y # quando ja fizemos pra todos os elementos da linha
+    li a2, 0x000000FF # a2 é preto        
+
+    mv a0, s5              # coordenada x (do contador s5)
+    mv a1, s4              # coordenada y (do contador s4)
+    li a7, 2200            # syscall setPixel
+    ecall
+
+    addi s3, s3, 1
+    addi s5, s5, 1
+
+    j set_black_x
+    
 
 ignore:
     lb t1, 0(s3) # olahmos o caractere atual
