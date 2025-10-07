@@ -40,9 +40,9 @@ main:
 
     mv s2, a0 # salvando o segundo numero em s2
 
-    jal ascii_pra_int
+    jal ascii_pra_int # pulando o "255"
 
-    jal ignore
+    jal ignore # ignorando a linha até a imagem 
 
     mv a0, s1      # largura X
     mv a1, s2          # altura Y
@@ -153,6 +153,3 @@ fim_conversao:
     addi s3, s3, 1
     ret     
     
-
-
-

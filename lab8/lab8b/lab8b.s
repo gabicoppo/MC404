@@ -74,13 +74,23 @@ loop_x:
     beq s4, s6, set_black_x # se for a primeira ou ultima linha, eh preto
 
 loop_y:
-    bqz s5, set_black
-    beq s5, s7, set_black # se for a primeira ou ultima coluna, eh preto
+    bqz s5, set_black_y
+    beq s5, s7, set_black_y # se for a primeira ou ultima coluna, eh preto
+
     beq s5, s1, fim_loop_y # quando ja fizemos pra todos os elementos da linha
     lbu t0, 0(s3)
     addi s3, s3, 1
 
     li a2, 0
+
+    # aplicando fórmula ------------------------
+
+    li s8, 0    # loop_k
+    li a3, 0    # onde vamos calcular a fórmula
+    li t6, 3    # loops k e q
+    j filter
+
+    # fim da aplicação da fórmula --------------
 
     slli t1, t0, 24      
     or a2, a2, t1         
@@ -122,6 +132,36 @@ set_black_x:
     addi s5, s5, 1
 
     j set_black_x
+
+set_black_y:
+    li a2, 0x000000FF # a2 é preto        
+
+    mv a0, s5              # coordenada x (do contador s5)
+    mv a1, s4              # coordenada y (do contador s4)
+    li a7, 2200            # syscall setPixel
+    ecall
+
+    addi s3, s3, 1
+    addi s5, s5, 1
+
+    j loop_y
+    
+filter:
+
+loop_k:
+    li s9, 0
+    beq s8, t6, loop_y
+
+loop_q:
+    beq s9, t6, fim_loop_k
+
+    
+
+
+    
+
+
+fim_loop_k:
     
 
 ignore:
