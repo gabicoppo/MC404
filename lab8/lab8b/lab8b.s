@@ -18,8 +18,6 @@ main:
 
     mv s0, a0  # movendo fd pro rd s0 tb
 
-    #jal proccess_header
-
     mv a0, s0  # file descriptor = s0 (image)
     la a1, header
     li a2, 262415
@@ -60,38 +58,98 @@ main:
 
 make_image:
     li s4, 0
-    mv s6, s2
-    addi s6, s6, -1
+    addi s6, s2, -1
 
 loop_x:
     beq s4, s2, fim_do_desenho # quando ja fizemos pra todas as linhas 
 
     li s5, 0
-    mv s7, s1
-    addi s7, s7, -1
+    addi s7, s1, -1
 
-    bqz s4, set_black_x
+    beqz s4, set_black_x
     beq s4, s6, set_black_x # se for a primeira ou ultima linha, eh preto
 
 loop_y:
-    bqz s5, set_black_y
+    beqz s5, set_black_y
     beq s5, s7, set_black_y # se for a primeira ou ultima coluna, eh preto
 
     beq s5, s1, fim_loop_y # quando ja fizemos pra todos os elementos da linha
     lbu t0, 0(s3)
-    addi s3, s3, 1
+
+    # INÍCIO DO FILTRO ------------------------
+
+    li s8, 0 # onde vamos acumular as somas
+    li t3, -1
+    li t4, 8 # pesos
+
+    # s1 = largura total
+    # s3 = onde estamos
+
+    # --- linha de cima (y-1) ---
+    sub t0, s3, s1      # t0 = endereço base da linha de cima (M[y-1][x])
+    addi t1, t0, -1     # endereço de M[y-1][x-1]
+    lbu t2, 0(t1)       # carrega o valor do pixel (1 byte)
+    mul t2, t2, t3      # valor * (-1)
+    add s8, s8, t2      # soma += resultado
+
+    lbu t2, 0(t0)       # M[y-1][x]
+    mul t2, t2, t3
+    add s8, s8, t2
+
+    addi t1, t0, 1      # M[y-1][x+1]
+    lbu t2, 0(t1)
+    mul t2, t2, t3
+    add s8, s8, t2
+
+    # --- linha do meio (y) ---
+    addi t1, s3, -1     # M[y][x-1]
+    lbu t2, 0(t1)
+    mul t2, t2, t3
+    add s8, s8, t2
+    
+    lbu t2, 0(s3)       # M[y][x] (O CENTRAL)
+    mul t2, t2, t4      # valor * (8)
+    add s8, s8, t2
+
+    addi t1, s3, 1      # M[y][x+1]
+    lbu t2, 0(t1)
+    mul t2, t2, t3
+    add s8, s8, t2
+
+    # --- linha de baixo (y+1) ---
+    add t0, s3, s1      # t0 = endereço base da linha de baixo (M[y+1][x])
+    addi t1, t0, -1     # M[y+1][x-1]
+    lbu t2, 0(t1)
+    mul t2, t2, t3
+    add s8, s8, t2
+
+    lbu t2, 0(t0)       # M[y+1][x]
+    mul t2, t2, t3
+    add s8, s8, t2
+
+    addi t1, t0, 1      # M[y+1][x+1]
+    lbu t2, 0(t1)
+    mul t2, t2, t3
+    add s8, s8, t2
+    
+    li t0, 255
+    bltz s8, set_zero     # se s8 menor q 0, a soma vira 0
+    bgt s8, t0, set_max   # se s8 maior q 255, a soma vira 255
+    j interval
+
+set_zero:
+    li s8, 0
+    j interval
+
+set_max:
+    mv s8, t0             # move 255 para s8
+
+interval:
+    mv t0, s8
+    
+    # FIM DO FILTRO ------------------------------
 
     li a2, 0
-
-    # aplicando fórmula ------------------------
-
-    li s8, 0    # loop_k
-    li a3, 0    # onde vamos calcular a fórmula
-    li t6, 3    # loops k e q
-    j filter
-
-    # fim da aplicação da fórmula --------------
-
     slli t1, t0, 24      
     or a2, a2, t1         
 
@@ -109,7 +167,9 @@ loop_y:
     li a7, 2200            # syscall setPixel
     ecall
 
-    addi s5, s5, 1
+    # avança para o próximo pixel
+    addi s3, s3, 1         
+    addi s5, s5, 1         
     j loop_y
 
 fim_loop_y:
@@ -145,24 +205,7 @@ set_black_y:
     addi s5, s5, 1
 
     j loop_y
-    
-filter:
 
-loop_k:
-    li s9, 0
-    beq s8, t6, loop_y
-
-loop_q:
-    beq s9, t6, fim_loop_k
-
-    
-
-
-    
-
-
-fim_loop_k:
-    
 
 ignore:
     lb t1, 0(s3) # olahmos o caractere atual
