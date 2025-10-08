@@ -18,8 +18,6 @@ main:
 
     mv s0, a0  # movendo fd pro rd s0 tb
 
-    #jal proccess_header
-
     mv a0, s0  # file descriptor = s0 (image)
     la a1, header
     li a2, 262415
