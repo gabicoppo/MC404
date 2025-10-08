@@ -29,6 +29,14 @@ main:
 
     li t4, 0
 
+    jal find_sum
+
+    li a0, 0
+    la a1, out_buffer
+    li a2, 50
+    li a7, 64
+    ecall
+
 
 find_sum:
     addi t4, t4, 1      # contador de index
@@ -38,7 +46,7 @@ find_sum:
 
     add t0, t1, t2
 
-    beq t0, a0, print_index   # se achamos o index correto, chamamos essa função
+    beq t0, a0, int_pra_ascii_pilha   # se achamos o index correto, chamamos essa função
 
     lw t3, 8(s1)   # next
 
@@ -58,37 +66,45 @@ no_index:
     li a7, 93    # syscall exit
     ecall
 
-print_index:
-    li t0, 10
-    li t1, 100
-    li t2, 1000
+int_pra_ascii_pilha:
+    li t1, 0       # contador
+    li t2, 10      # pra dividirmos nosso int
 
-    bge a0, t2, milhar  # se o index é 1000, int pr ascii desde o milhar
-    bge a0, t1, centena
-    bge a0, t0, dezena
+    # index que queremos printar está em t0
+loop_extração:
+    li t5, 0
+    beq t0, t5, loop_escreve_buffer
 
-    mv t4, a0
+    remu t3, t0, t2        # pegamos o resto por 10
+    div t0, t0, t2         # numero dividido por 10
 
-    j unidade
+    addi t3, t3, 48        # transformando pra ascii
+    addi t1, t1, 1         # adicionando no contador
+
+    # PUSH - abaixando a pilha pra adicionarmos o digito
+    addi sp, sp, -4
+    sw t3, 0(sp)           # guardando nosso numero na pilha
+
+    j loop_extração
+
+loop_escreve_buffer:
+    beq t1, t5, fim_escrita_buffer    # se o contador for 0, terminamos a escrita
+
+    lw t3, 0(sp)
+    addi sp, sp, 4
+
+    sb t3, 0(s3)    # colocando gisisto ascii no buffer
+    addi s3, s3, 1
+    addi t1, t1, -1
+
+    j loop_escreve_buffer
 
 
-milhar:
-    li t1, 1000
-    divu t2, t4, t1
-    addi t2, t4, 48
-    sb t2, 0(a1) # guardando o primeiro numero no buffer de saída
-    remu t0, t0, t1 # pegando o resto da divisão por 1000 pra  converter prox digito
+fim_escrita_buffer:
+    li t1, '\n'
+    lw t1, 0(s3)
 
-centena:
-
-dezena:
-
-unidade:
-
-    li a7, 93    # syscall exit
-    ecall
-
-int_pra_ascii:
+    ret
 
 ascii_pra_int:
     li a0, 0               # Zera o acumulador do resultado
