@@ -10,14 +10,15 @@ out_buffer: .skip 50
 
 .text
 
-.globl _start
-
 .globl gets
 
 .globl puts
 
 .globl atoi
 
+.globl itoa
+
+.globl linked_list_search
 
 gets:
     li a0, 0
