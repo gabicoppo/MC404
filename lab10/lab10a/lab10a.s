@@ -54,7 +54,7 @@ puts:
 
 loop_puts:
     lb t2, a(t0)
-    beq t2, zero, write_buffer
+    beqz t2, write_buffer
 
     addi t0, t0, 1    # andando no buffer
     addi t1, t1, 1    # somando no contador
@@ -153,10 +153,10 @@ end_atoi:
 
 itoa:
     addi sp, sp -16
-    lw s0, 12(sp)
-    lw s1, 8(sp)
-    lw s2, 4(sp)
-    lw s3, 0(sp)
+    sw s0, 12(sp)
+    sw s1, 8(sp)
+    sw s2, 4(sp)
+    sw s3, 0(sp)
 
     mv s0, a1          # ponteiro pra buffer final está em s0, mas esse vamos modificar
     mv s3, s0          # em s3 está o ponteiro inicial que não vamos mudar
@@ -179,7 +179,7 @@ loop_extracao:
     beq t1, s2, is_hexadecimal
 
 is_decimal:
-    beq s1, zero, loop_escreve_buffer
+    beqz s1, loop_escreve_buffer
     
     remu t1, s1, s2
     divu s1, s1, s2
@@ -193,7 +193,7 @@ is_decimal:
     j is_decimal
 
 is_hexadecimal:
-    beq s1, zero, loop_escreve_buffer
+    beqz s1, loop_escreve_buffer
 
     remu t1, s1, s2
     divu s1, s1, s2
@@ -221,7 +221,7 @@ is_letter:
 
 
 loop_escreve_buffer:
-    beq t0, zero, fim_escrita_buffer
+    beqz t0, fim_escrita_buffer
     lw t1, 0(sp)
 
     addi sp, sp, 4
@@ -248,4 +248,39 @@ fim_itoa:
 end_itoa:
     ret
 
+linked_list_search:
+    addi sp, sp, -8
+    sw s0, 4(sp)
+    sw s1, 0(sp)
 
+    mv s0, a0         # ponteiro pra head em s0
+    mv s1, a1         # valor val1 + vaç2 a ser encontrado
+    li t1, 0          # contador de index
+
+find_sum:
+    beqz s0, menosum
+
+    li t0, 0
+    lw t1, 0(s0)
+    lw t2, 4(s0)
+
+    add t0, t1, t2
+    beq t0, s1, finaliza_search
+
+    lw s0, 8(s0)         # avança p próximo nó
+    addi t1, t1, 1       # adiciona do index
+
+    j find_sum
+
+menosum:
+    li t1, -1            # setamos o index como -1
+
+finaliza_search:
+    mv a0, t1            # movendo o index pra a0
+
+    lw s1, 4(sp)
+    lw s0, 0(sp)
+    addi sp, sp, 8
+
+end_linked_list_search:
+    ret
