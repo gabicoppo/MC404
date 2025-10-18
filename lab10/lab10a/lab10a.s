@@ -12,6 +12,13 @@ out_buffer: .skip 50
 
 .globl _start
 
+.globl gets
+
+.globl puts
+
+.globl atoi
+
+
 gets:
     li a0, 0
     li a1, in_buffer
@@ -143,4 +150,102 @@ end_loop_atoi:
 
 end_atoi:
     ret
+
+itoa:
+    addi sp, sp -16
+    lw s0, 12(sp)
+    lw s1, 8(sp)
+    lw s2, 4(sp)
+    lw s3, 0(sp)
+
+    mv s0, a1          # ponteiro pra buffer final está em s0, mas esse vamos modificar
+    mv s3, s0          # em s3 está o ponteiro inicial que não vamos mudar
+    mv s1, a0          # index que vamos printar está em s1
+    mv s2, a2          # base em s2
+
+    li t0, 0
+    bne s1, zero, loop_extracao
+
+    li t1, '0'
+    addi t0, t0, 1
+    addi sp, sp, -4
+    lw t1, 0(sp)
+    j loop_escreve_buffer
+
+loop_extracao:
+    li t1, 10
+    beq t1, s2, is_decimal
+    li t1, 16
+    beq t1, s2, is_hexadecimal
+
+is_decimal:
+    beq s1, zero, loop_escreve_buffer
+    
+    remu t1, s1, s2
+    divu s1, s1, s2
+
+    addi t1, t1, 48
+    addi t0, t0, 1
+
+    addi sp, sp -4
+    sw t1, 0(sp)
+
+    j is_decimal
+
+is_hexadecimal:
+    beq s1, zero, loop_escreve_buffer
+
+    remu t1, s1, s2
+    divu s1, s1, s2
+
+    li t2, 10
+    bge t1, t2, is_letter
+
+    addi t1, t1, 48
+    addi t0, t0, 1
+
+    addi sp, sp -4
+    sw t1, 0(sp)
+
+    j is_hexadecimal
+
+
+is_letter:
+    addi t1, t1, 87
+    addi t0, t0, 1
+
+    addi sp, sp -4
+    sw t1, 0(sp)
+
+    j is_hexadecimal
+
+
+loop_escreve_buffer:
+    beq t0, zero, fim_escrita_buffer
+    lw t1, 0(sp)
+
+    addi sp, sp, 4
+    sb t1, 0(s0)
+
+    addi s0, s0, 1
+    addi, t0, t0 -1
+
+    j loop_escreve_buffer
+
+fim_escrita_buffer:
+    sb zero, 0(s0)
+
+fim_itoa:
+    mv a0, s3
+
+    lw s3, 12(sp)
+    lw s2, 8(sp)
+    lw s1, 4(sp)
+    lw s0, 0(sp)
+
+    addi sp, sp, 16
+
+end_itoa:
+    ret
+
 
