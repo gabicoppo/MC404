@@ -9,7 +9,7 @@ newline_char: .asciz "\n"
 .globl atoi
 .globl exit
 .globl itoa
-.globl linked_list_search
+.globl recursive_tree_search
 
 gets:
     addi sp, sp, -4
@@ -245,40 +245,57 @@ fim_itoa:
 end_itoa:
     ret
 
-linked_list_search:
-    addi sp, sp, -8
-    sw s0, 4(sp)
-    sw s1, 0(sp)
-
-    mv s0, a0         # ponteiro para head
-    mv s1, a1         # valor procurado (val1 + val2)
-    li t3, 0          # índice atual
-
-find_sum:
-    beqz s0, menosum
-
-    lw t1, 0(s0)      # val1
-    lw t2, 4(s0)      # val2
-
-    add t0, t1, t2    # soma val1 + val2
-    beq t0, s1, finaliza_search
-
-    lw s0, 8(s0)      # próximo nó
-    addi t3, t3, 1    # incrementa índice
-
-    j find_sum
-
-menosum:
-    li t3, -1         # não encontrado
-
+recursive_tree_search:
+    beqz a0, not_found # se ponteiro eh null, nao achamos
+    
+    addi sp, sp, -16
+    sw ra, 12(sp)
+    sw s0, 8(sp)
+    sw s1, 4(sp)
+    sw s2, 0(sp)
+    
+    mv s0, a0         # nó atual
+    mv s1, a1         # val
+    
+    lw t0, 0(s0)      # val
+    
+    beq t0, s1, found_here
+    
+    # prucura na esquerda
+    lw a0, 4(s0)      # left
+    mv a1, s1         # val
+    jal recursive_tree_search
+    
+    bnez a0, found_in_child
+    
+    # não achamos na esuqerda, procura na direita
+    lw a0, 8(s0)      # right
+    mv a1, s1         # val a procurar
+    jal recursive_tree_search
+    
+    bnez a0, found_in_child
+    
+    # achamos em nenhuma
+    li a0, 0
+    j finaliza_search
+    
+found_here:
+    li a0, 1
+    j finaliza_search
+    
+found_in_child:
+    addi a0, a0, 1 # achamos valor no filho, incrementamos depth
+    
 finaliza_search:
-    mv a0, t3         # retorna índice
+    lw s2, 0(sp)
+    lw s1, 4(sp)
+    lw s0, 8(sp)
+    lw ra, 12(sp)
+    addi sp, sp, 16
+    ret
 
-    lw s1, 0(sp)
-    lw s0, 4(sp)
-    addi sp, sp, 8
-
-end_linked_list_search:
+not_found:
+    li a0, 0
     ret
 
 exit:
