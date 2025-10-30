@@ -5,7 +5,7 @@
 node_op:
     lw t0, 0(a0)
     lb t1, 4(a0)
-    lb t2, 8(a0)
+    lb t2, 5(a0)
     lh t3, 6(a0)
 
     li t4, 0
