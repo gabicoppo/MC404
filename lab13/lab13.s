@@ -1,10 +1,6 @@
 .section .text
 
-.set SERIAL_PORT, 0xFFFF0100
-
-which_operation:
-
-in_buffer:  
+.set BASE_SERIAL_PORT, 0xFFFF0100
 
 
 .globl main
@@ -28,8 +24,6 @@ main:
     beq a1, t0, operation_4
 
 
-    
-
 
 
 operation_1:
@@ -39,30 +33,22 @@ operation_1:
     jal set_write
 
 
-
-
-operation_2:
-
-operation_3:
-
-operation_4:
-
 set_read:
-    li t0, 0x02
-    li a1, SERIAL_PORT
-    add a1, a1, t0
+    li a1, BASE_SERIAL_PORT
     li t1, 1
-    sw t1, 0(a1)        # setando 1 na read
+    sw t1, 2(a1)        # setando 1 na read
+
+wait_read:
+    lw t2, 2(a1)
+    bnez t2, wait_read         # enquanto base+2 for 1, esperamos no loop
 
     li a0, 0
 
 read:
     addi a0, a0, 1
-    li t1, 0x03
-    li a1, SERIAL_PORT
-    add a1, a1, t1
+    li a1, BASE_SERIAL_PORT
 
-    lb t2, 0(a1)
+    lb t2, 3(a1)
 
     addi sp, sp, -4
     sb t2, 0(sp)          # empilhando cada byte na pilha 
@@ -71,7 +57,7 @@ read:
 
 unset_read:
     li t0, 0x02
-    li a1, SERIAL_PORT
+    li a1, BASE_SERIAL_PORT
     add a1, a1, t0
     li t1, 0
     sw t1, 0(a1)        # acabamos leitura, seta 0 na read
@@ -80,22 +66,32 @@ unset_read:
 
 set_write:
     mv t0, a0
-    li t1, 4
 
 write:
-    addi t0, t0 -1
-    mul t2, t0, t1
+    addi t0, t0, -1
 
-    li a2, SERIAL_PORT
-    add t2, t2, a2
+    li a2, BASE_SERIAL_PORT
+    add t2, t0, a2   # base + offset
     
-    lw t1, 0(sp)
-    sw t1, 0(t2)
+    lb t1, 0(sp)     # tira char da pilha
+    sb t1, 0(t2)     # coloca no lugar certo
 
-    addi sp, sp, 4
+    addi sp, sp, 4  # add na pilha
 
-    bge t0, zero, write
+    bge t0, zero, write   # se o numero de bytes lidos ainda nao eh 0, continuamos escrevendo
 
-    
+    li t3, 0x01
+    add a2, a2, t3
+
+    li t3, 1
+    sw t3, 0(s2)   # write
+
+    ret
+
+
+
+
+
+
 
 
