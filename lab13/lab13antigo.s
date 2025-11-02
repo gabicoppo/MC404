@@ -145,130 +145,110 @@ wait_newline_complete_op2:
     ecall
 
 operation_3:
-    li s2, 0            # acumulador decimal
-    li s1, 1            # sinal
-    li s4, 0            # contador de dígitos hex
-    
-    jal read_char_op3   # lê primeiro caractere
-    
-    li t5, '-'
-    beq a0, t5, is_negative_op3
-    
-    # primeiro char é dígito
-    j process_digit_op3
+    li a1, 0
+    li a2, 10
+    li a3, 16
+    li s4, 0
+    li s1, 1    # sinal
+    jal convert_until_newline
 
-is_negative_op3:
-    li s1, -1           # marca como negativo
-    jal read_char_op3   # lê próximo caractere
-    j process_digit_op3
+convert_until_newline:
+    li a4, '\n'
+    bne a0, a4, read_char_op3
+    # em a1 tem o inteiro decimal recebido
 
-read_loop_op3:
-    jal read_char_op3
+convert_hexadecimal: # se chgeamos aqui, chegou no ultimo newline
+    beqz a1, write_digits_op3     # se o quociente é zero, terminamos
     
-process_digit_op3:
-    li t4, '\n'
-    beq a0, t4, convert_to_hex_op3  # se \n, terminou leitura
-    
-    # converte char para dígito
-    addi t0, a0, -48    # '0' = 48
-    
-    # multiplica acumulador por 10 e soma dígito
-    li t1, 10
-    mul s2, s2, t1
-    add s2, s2, t0
-    
-    j read_loop_op3
+    remu t1, a1, a3    # resto
+    divu a1, a1, a3    # quociente
 
-convert_to_hex_op3:
-    # aplica sinal
-    mul s2, s2, s1
+    li t2, 10
+    blt t1, t2, is_digit
     
-    # se negativo, já está em complemento de 2 (representação interna)
-    mv a1, s2           # copia para a1
-    
-    # caso especial zero
-    bnez a1, hex_loop_op3
-    
-    # escreve '0'
-    li t1, '0'
+    # 'A' = 65
+    addi t1, t1, 55
+    j push_digit
+
+is_digit:
+    addi t1, t1, 48    # '0'
+
+push_digit:
     addi sp, sp, -4
     sw t1, 0(sp)
-    addi s4, s4, 1   # acrescenta no contador de digitos
-    j write_digits_op3
+    addi s4, s4, 1       # contador de digitos escritos
 
-hex_loop_op3:
-    beqz s4, check_more_digits_op3
-    j write_digits_op3
-
-check_more_digits_op3:
-    beqz a1, write_digits_op3  # terminou conversão
-    
-    li a3, 16
-    remu t1, a1, a3     # resto 
-    divu a1, a1, a3     # quociente
-    
-    li t2, 10
-    blt t1, t2, is_digit_op3
-    
-    # A = 65
-    addi t1, t1, 55
-    j push_digit_op3
-
-is_digit_op3:
-    addi t1, t1, 48      # converte p char
-
-push_digit_op3:
-    addi sp, sp, -4
-    sw t1, 0(sp)         # coloca o dígito na pilha
-    addi s4, s4, 1
-    
-    j check_more_digits_op3   
+    j convert_hexadecimal
 
 write_digits_op3:
-    beqz s4, write_newline_op3   # se acabou os digitos, escrevemos \n
-    
-    lw a0, 0(sp)         # tiramos da pilha
-    addi sp, sp, 4
-    
-    jal write_char_op3   # chamamos f que escreve
-    
-    addi s4, s4, -1      # decrementa do contador de digitos
+    beqz s4, finish_op3
+
+    lb a0, 0(sp)       # tira char da pilha
+    addi sp, sp, 4     # add na pilha
+
+write_char_loop_op3:
+    li a1, BASE_SERIAL_PORT
+
+    lb t1, 0(a1)
+    bnez t1, write_char_loop_op3     # enquanto base for 1, esperamos no loop
+
+    sb a0, 1(a1)     # coloca no lugar certo
+
+    li t2, 1
+    sb t2, 0(a1)      # set 1 no write p escrever
+
+wait_write_op3:
+    lb t1, 0(a1)
+    bnez t1, wait_write_op3     # esperamos a escrita terminar, ou seja ficar igual a 0
+
+    addi s4, s4, -1             # decrementa no contador de digitos 
     j write_digits_op3
 
-write_newline_op3:
-    li a0, '\n'
-    jal write_char_op3
-    
-    li a7, 93          # escrevemos \n e acaba a operação 3
+finish_op3:
+    li t1, '\n'
+    li a1, BASE_SERIAL_PORT
+
+    lb t1, 0(a1)
+    bnez t1, write_char_loop_op3     # enquanto base for 1, esperamos no loop
+
+    sb t1, 1(a1)     # coloca no lugar certo
+
+    li t2, 1
+    sb t2, 0(a1)      # set 1 no write p escrever
+
+last_wait_write_op3:
+    lb t1, 0(a1)
+    bnez t1, last_wait_write_op3     # esperamos a escrita terminar, ou seja ficar igual a 0
+
+    li a7, 93
     ecall
 
 read_char_op3:
     li a1, BASE_SERIAL_PORT
     li t1, 1
-    sb t1, 2(a1)
+    li t5, 45         # '-'
+    sb t1, 2(a1)        # setando 1 na read
 
 wait_read_op3:
     lb t2, 2(a1)
-    bnez t2, wait_read_op3
-    
+    bnez t2, wait_read_op3        # enquanto base+2 for 1, esperamos no loop
+
     lb a0, 3(a1)
-    ret
+    mv t0, a0
 
-write_char_op3:
-    li a1, BASE_SERIAL_PORT
+    beq a0, t5, is_negative      # se o primeiro char eh "-", eh negativo, s1 = -1
 
-wait_write_ready_op3:
-    lb t1, 0(a1)
-    bnez t1, wait_write_ready_op3
-    
-    sb a0, 1(a1)           # coloca o char no lugar
-    li t2, 1
-    sb t2, 0(a1)           # e escreve
+    j convert_decimal
 
-wait_write_complete_op3:
-    lb t1, 0(a1)
-    bnez t1, wait_write_complete_op3
-    
-    ret
+is_negative:
+    li s1, -1
+
+convert_decimal:
+    mul a1, a1, a2
+    addi t0, t0, -48
+
+    add a1, a1, t0
+
+    j convert_until_newline
 
 operation_4:
