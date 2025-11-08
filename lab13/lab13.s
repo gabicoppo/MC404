@@ -408,7 +408,7 @@ write_result:
     # caso especial zero
     bnez a1, dec_loop_op4
     
-    # escreve '0'
+    # escreve 0
     li t1, '0'
     addi sp, sp, -4
     sw t1, 0(sp)
