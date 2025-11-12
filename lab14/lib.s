@@ -20,31 +20,31 @@ _start:
     la sp, main_stack_end
 
     # Configura mscratch com o topo da pilha das ISRs.
-    la t0, isr_stack_end # t0 <= base da pilha
-    csrw mscratch, t0 # mscratch <= t0
+    la t0, isr_stack_end            # t0 <= base da pilha
+    csrw mscratch, t0            # mscratch <= t0
 
     # Registrar a ISR direct mode
-    la t0, isr_trata_gpt # Grava o endereço da ISR principal
-    csrw mtvec, t0 # no registrador mtvec
-
+    la t0, isr_trata_gpt            # Grava o endereço da ISR principal
+    csrw mtvec, t0                  # no registrador mtvec
 
     # Habilita Interrupções Externas
-    csrr t1, mie # Seta o bit 11 (MEIE) 
-    li t2, 0x800 # do registrador mie
+    csrr t1, mie                    # Seta o bit 11 (MEIE) 
+    li t2, 0x800                    # do registrador mie
     or t1, t1, t2 
     csrw mie, t1
 
     # Habilita Interrupções Global
-    csrr t1, mstatus # Seta o bit 3 (MIE) 
-    ori t1, t1, 0x8 # do registrador mstatus
+    csrr t1, mstatus                # Seta o bit 3 (MIE) 
+    ori t1, t1, 0x8                 # do registrador mstatus
     csrw mstatus, t1
 
-    li t0, 0xFFFF0100     # Endereço do registrador do GPT
-    li t1, 100              # Valor (100 ms)
-    sw t1, 8(t0)          # Programa o timer
+    li t0, 0xFFFF0100               # Endereço do registrador do GPT
+    li t1, 100                      # Valor (100 ms)
+    sw t1, 8(t0)                    # Programa o timer
 
 
     jal main
+
 
 .globl isr_trata_gpt
 isr_trata_gpt:
@@ -71,6 +71,7 @@ isr_trata_gpt:
 
     csrrw sp, mscratch, sp # Troca sp com mscratch novamente
     mret # Retorna da interrupção
+
 
 .globl play_note
 play_note:
