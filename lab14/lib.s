@@ -21,7 +21,7 @@ _start:
 
     # Configura mscratch com o topo da pilha das ISRs.
     la t0, isr_stack_end            # t0 <= base da pilha
-    csrw mscratch, t0            # mscratch <= t0
+    csrw mscratch, t0               # mscratch <= t0
 
     # Registrar a ISR direct mode
     la t0, isr_trata_gpt            # Grava o endereço da ISR principal
@@ -61,7 +61,7 @@ isr_trata_gpt:
     sw t1, 0(t0)          
 
     li t0, 0xFFFF0100    
-    li t1, 100            # valor 100 ms
+    li t1, 100                    # valor 100 ms
     sw t1, 8(t0)        
 
     lw t2, 8(sp)
