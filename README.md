@@ -1,4 +1,4 @@
-# MC404 - Organizacao e Arquitetura de Computadores (Unicamp)
+# MC404 - Organização Básica de Computadores e Linguagem de Montagem (Unicamp)
 
 Laboratorios da disciplina MC404, cursada no Instituto de Computacao da Unicamp no 2 semestre de 2025, com foco em integracao entre C e Assembly RISC-V.
 
